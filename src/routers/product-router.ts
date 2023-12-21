@@ -1,32 +1,46 @@
-import {Request, Response, Router} from "express";
-import {productsRepository} from "../repositories/products-repository";
+import {Router, Response, Request} from "express";
+import {productsRepository, ProductType} from "../repositories/products-repository";
+import {body, validationResult} from "express-validator";
 
 export const productsRoute = Router({})
 
+const titleValidation = body('title').trim().isLength({min: 3, max: 10}).withMessage('title length should ')
+
+productsRoute.post('/', titleValidation, (req: Request, res: Response) => {
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            res.status(400).json({errors: errors.array()})
+        }
+        const newProduct = productsRepository.createProduct(req.body.title)
+        res.status(201).send(newProduct)
+    })
+productsRoute.put('/:id', titleValidation , (req: Request, res: Response) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+       res.status(400).json({errors: errors.array()})
+    }
+    const isUpdate = productsRepository.updateProduct(+req.params.id, req.body.title)
 
 
-
-productsRoute.get('/', (req: Request, res: Response) => {
-
-    const foundProducts = productsRepository.findProducts(req.query.title?.toString());
-    res.send(foundProducts)
-})
-productsRoute.post('/:id', (req: Request, res: Response) => {
-    const newProduct = productsRepository.createProduct(req.body.title)
-    res.status(201).send(newProduct)
-})
-productsRoute.get('/:id', (req: Request, res: Response) => {
-    let product = productsRepository.findProductByID(+req.params.id)
-    if (product) {
+    if (isUpdate) {
+        const product = productsRepository.findProductByID(+req.params.id)
         res.send(product)
     } else {
         res.send(404)
     }
 })
-productsRoute.put('/:id', (req: Request, res: Response) => {
-    const isUpdate = productsRepository.updateProduct(+req.params.id, req.body.title)
-    if (isUpdate) {
-        const product = productsRepository.findProductByID(+req.params.id)
+productsRoute.get('/', async (req: Request, res: Response) => {
+
+    const foundProductsPromise: Promise<ProductType[]> = productsRepository.findProducts(req.query.title?.toString());
+
+    const foundProducts = await foundProductsPromise
+
+    res.send(foundProducts)
+})
+
+productsRoute.get('/:id', (req: Request, res: Response) => {
+    let product = productsRepository.findProductByID(+req.params.id)
+    if (product) {
         res.send(product)
     } else {
         res.send(404)

@@ -1,8 +1,12 @@
 const products = [{id: 1, title: 'tomato'}, {id:2, title: 'orange'}]
 
+export type ProductType = {
+    id: number
+    title: string
+}
 
 export const productsRepository = {
-    findProducts(title:string | null | undefined) {
+  async findProducts(title:string | null | undefined): Promise<ProductType[]>  {
         if (title) {
             let filteredProducts = products.filter(p => p.title.indexOf(title) > -1)
             return filteredProducts
