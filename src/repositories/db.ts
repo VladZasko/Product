@@ -6,7 +6,7 @@ export type ProductType = {
 }
 
 const mongoUri =
-    process.env.mongoURI || "mongodb+srv://vladzasko:<FKSdwWJieyi7AM6u>@cluster0.msxlf7v.mongodb.net/?retryWrites=true&w=majority";
+    process.env.mongoURI || "mongodb+srv://vladzasko:FKSdwWJieyi7AM6u@cluster0.msxlf7v.mongodb.net/shop-db?retryWrites=true&w=majority";
 
 export const client = new MongoClient(mongoUri)
 const db = client.db('products');
