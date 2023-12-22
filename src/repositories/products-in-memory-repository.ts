@@ -5,7 +5,7 @@ export type ProductType = {
     title: string
 }
 
-export const productsRepository = {
+export const productsInMemoryRepository = {
   async findProducts(title:string | null | undefined): Promise<ProductType[]>  {
         if (title) {
             let filteredProducts = products.filter(p => p.title.indexOf(title) > -1)
@@ -14,11 +14,15 @@ export const productsRepository = {
             return products
         }
     },
-    findProductByID(id: number) {
+    async findProductByID(id: number): Promise<ProductType | null> {
         let product = products.find(p=>p.id === id)
-        return product;
+        if (product){
+            return product
+        } else {
+            return null
+        }
     },
-    createProduct(title: string) {
+    async createProduct(title: string): Promise<ProductType> {
         const newProduct = {
             id: +(new Date()),
             title: title
@@ -26,7 +30,7 @@ export const productsRepository = {
         products.push(newProduct)
         return newProduct
     },
-    updateProduct(id: number, title: string) {
+    async updateProduct(id: number, title: string): Promise<boolean> {
         let product = products.find(p => p.id === id)
         if(product) {
             product.title = title
@@ -35,11 +39,11 @@ export const productsRepository = {
             return false;
         }
     },
-    deleteProduct(id: number) {
+    async deleteProduct(id: number): Promise<boolean> {
         for (let i=0; i < products.length; i++) {
             if (products[i].id === id) {
                 products.splice(1, 1);
-                return;
+                return true
             }
         }
         return false

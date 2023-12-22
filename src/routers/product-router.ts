@@ -1,53 +1,52 @@
 import {Router, Response, Request} from "express";
-import {productsRepository, ProductType} from "../repositories/products-repository";
+import {productsInMemoryRepository} from "../repositories/products-db-repository";
 import {body, validationResult} from "express-validator";
 
-export const productsRoute = Router({})
+export const productsRouter = Router({})
 
 const titleValidation = body('title').trim().isLength({min: 3, max: 10}).withMessage('title length should ')
 
-productsRoute.post('/', titleValidation, (req: Request, res: Response) => {
+productsRouter.post('/', titleValidation,
+    async (req: Request, res: Response) => {
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
             res.status(400).json({errors: errors.array()})
         }
-        const newProduct = productsRepository.createProduct(req.body.title)
+        const newProduct = await productsInMemoryRepository.createProduct(req.body.title)
         res.status(201).send(newProduct)
-    })
-productsRoute.put('/:id', titleValidation , (req: Request, res: Response) => {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-       res.status(400).json({errors: errors.array()})
-    }
-    const isUpdate = productsRepository.updateProduct(+req.params.id, req.body.title)
-
-
-    if (isUpdate) {
-        const product = productsRepository.findProductByID(+req.params.id)
-        res.send(product)
-    } else {
-        res.send(404)
-    }
 })
-productsRoute.get('/', async (req: Request, res: Response) => {
+productsRouter.put('/:id', titleValidation ,
+    async (req: Request, res: Response) => {
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            res.status(400).json({errors: errors.array()})
+        }
+        const isUpdate = await productsInMemoryRepository.updateProduct(+req.params.id, req.body.title)
 
-    const foundProductsPromise: Promise<ProductType[]> = productsRepository.findProducts(req.query.title?.toString());
+        if (isUpdate) {
+            const product = await productsInMemoryRepository.findProductByID(+req.params.id)
+            res.send(product)
+        } else {
+            res.send(404)
+        }
+    })
+productsRouter.get('/', async (req: Request, res: Response) => {
 
-    const foundProducts = await foundProductsPromise
+    const foundProducts = await productsInMemoryRepository.findProducts(req.query.title?.toString());
 
     res.send(foundProducts)
 })
 
-productsRoute.get('/:id', (req: Request, res: Response) => {
-    let product = productsRepository.findProductByID(+req.params.id)
+productsRouter.get('/:id', async (req: Request, res: Response) => {
+    let product = await productsInMemoryRepository.findProductByID(+req.params.id)
     if (product) {
         res.send(product)
     } else {
         res.send(404)
     }
 })
-productsRoute.delete('/:id' , (req: Request, res: Response) => {
-    const isDeleted = productsRepository.deleteProduct(+req.params.id)
+productsRouter.delete('/:id' , async (req: Request, res: Response) => {
+    const isDeleted = await productsInMemoryRepository.deleteProduct(+req.params.id)
     if (isDeleted) {
         res.send(204);
     } else {
